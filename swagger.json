@@ -2,15 +2,16 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Bank Slip Validator API",
-    "description": "API for validating bank slip (boleto) digit lines according to FEBRABAN standards",
+    "description": "API for validating Brazilian bank slip (boleto) digit lines according to FEBRABAN standards",
     "version": "1.0.0",
     "contact": {
-      "name": "API Support"
+      "name": "API Support",
+      "url": "https://github.com/[your-repository]"
     }
   },
   "servers": [
     {
-      "url": "https://your-app.netlify.app/.netlify/functions/api",
+      "url": "https://[your-app].netlify.app/.netlify/functions/api",
       "description": "Production server"
     },
     {
@@ -23,6 +24,124 @@
       "ApiKeyAuth": []
     }
   ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "API health check endpoints"
+    },
+    {
+      "name": "Validation",
+      "description": "Bank slip validation endpoints"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "API Health Check",
+        "description": "Returns API status and version information",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "example": "Bank Slip Validator API"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "API para consultar linhas digitáveis de boleto"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    },
+    "/boleto/{digitLine}": {
+      "get": {
+        "tags": ["Validation"],
+        "summary": "Validate Bank Slip",
+        "description": "Validates a bank slip digit line and returns its details",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "digitLine",
+            "in": "path",
+            "required": true,
+            "description": "Bank slip digit line (47 digits for bank slips, 48 digits for utility slips)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{47,48}$"
+            },
+            "examples": {
+              "bankSlip": {
+                "value": "23793380296099605290241006333300689690000143014",
+                "summary": "Bank Slip Example"
+              },
+              "utilitySlip": {
+                "value": "846100000005246100291102005460339004695895061080",
+                "summary": "Utility Payment Slip Example"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoletoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          }
+        }
+      }
+    }
+  },
   "components": {
     "securitySchemes": {
       "ApiKeyAuth": {
@@ -32,9 +151,45 @@
         "description": "API key for authentication"
       }
     },
+    "schemas": {
+      "BoletoResponse": {
+        "type": "object",
+        "properties": {
+          "barCode": {
+            "type": "string",
+            "description": "Generated barcode",
+            "example": "23796896900001430143380260996052904100633330"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Payment amount",
+            "example": "1430.14"
+          },
+          "expirationDate": {
+            "type": "string",
+            "nullable": true,
+            "description": "Expiration date (DD-MM-YYYY format for bank slips, null for utility slips)",
+            "example": "28-04-2022"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "description": "HTTP status code"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      }
+    },
     "responses": {
       "UnauthorizedError": {
-        "description": "API key is missing or invalid",
+        "description": "Authentication error",
         "content": {
           "application/json": {
             "schema": {
@@ -70,97 +225,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    }
-  },
-  "paths": {
-    "/": {
-      "get": {
-        "summary": "API Status",
-        "description": "Returns API status information",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "title": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "version": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
-          }
-        }
-      }
-    },
-    "/boleto/{digitLine}": {
-      "get": {
-        "summary": "Validate Bank Slip",
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "digitLine",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "pattern": "^[0-9]{47,48}$"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful validation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BoletoResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/UnauthorizedError"
-          },
-          "429": {
-            "$ref": "#/components/responses/TooManyRequests"
           }
         }
       }
