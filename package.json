@@ -1,0 +1,29 @@
+{
+  "name": "bank-slip-validator",
+  "version": "1.0.0",
+  "description": "Bank Slip Validator API",
+  "main": "functions/api.ts",
+  "scripts": {
+    "build": "netlify-lambda build functions",
+    "dev": "netlify dev",
+    "start": "netlify dev",
+    "test": "jest"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.1"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^3.0.0",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/jest": "^28.1.1",
+    "@types/node": "^17.0.39",
+    "jest": "^28.1.1",
+    "netlify-cli": "^15.11.0",
+    "netlify-lambda": "^2.0.16",
+    "serverless-http": "^3.2.0",
+    "ts-jest": "^28.0.4",
+    "typescript": "^4.7.3"
+  }
+}
